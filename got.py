@@ -53,7 +53,9 @@ def serialize_house(house):
         "words": house["words"],
         "founded": house["founded"],
         "titles": house["titles"],
-        "ancestralWeapons": house["ancestralWeapons"]
+        "ancestralWeapons": house["ancestralWeapons"],
+        "region": house["region"],
+        "seats": house["seats"]
     }
 
 
@@ -82,22 +84,15 @@ def serialize_person(person):
         "title": person["title"],
     }
 
-
-def serialize_cast(cast):
-    return {
-        "name": cast[0],
-        "job": cast[1],
-        "role": cast[2]
-    }
-
 @app.route("/list")
 def get_list():
     def work(tx):
         return list(tx.run(
-            "MATCH (n:House) "
-            "RETURN n AS house LIMIT 25"
+            "MATCH (n:Person)-[r:ALLIED_WITH]->(h:House) "
+            "RETURN h AS house, SUM(SIZE(n.tvSeries)) "
+            "ORDER BY SUM(SIZE(n.tvSeries)) DESC "
+            "LIMIT 10"
         ))
-
     db = get_db()
     results = db.read_transaction(work)
     return Response(
@@ -105,7 +100,23 @@ def get_list():
         mimetype="application/json"
     )
 
+@app.route("/allies/<house_id>", methods=["GET"])
+def get_allies(house_id):
+    def work(tx):
+        return list(tx.run(
+            "MATCH (p:Person)-[r:ALLIED_WITH]->(h:House) "
+            "WHERE h.id = toInteger($house) "
+            "RETURN COUNT(p) AS num_allies",
+            {"house": house_id}
+        ))
+    db = get_db()
+    results = db.read_transaction(work)
+    return Response(
+        dumps(results[0]["num_allies"]),
+        mimetype="application/json"
+    )
+
 if __name__ == "__main__":
     logging.root.setLevel(logging.INFO)
     logging.info("Starting on port %d, database is at %s", port, url)
-    app.run(port=port)
+    app.run(port=port, use_reloader=True)
