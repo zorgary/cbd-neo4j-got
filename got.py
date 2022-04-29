@@ -10,6 +10,7 @@ from flask import (
 )
 from neo4j import (
     GraphDatabase,
+    Record,
     basic_auth,
 )
 
@@ -44,6 +45,9 @@ def close_db(error):
 def get_index():
     return app.send_static_file("index.html")
 
+@app.route("/characters")
+def get_characters():
+    return app.send_static_file("characters.html")
 
 def serialize_house(house):
     return {
@@ -74,14 +78,16 @@ def serialize_seat(seat):
 def serialize_person(person):
     return {
         "id": person["id"],
+        "name": person["name"],
         "aliases": person["aliases"],
+        "born": person["born"],
         "books": person["books"],
         "tvSeries": person["tvSeries"],
         "playedBy": person["playedBy"],
         "isFemale": person["isFemale"],
         "culture": person["culture"],
         "died": person["died"],
-        "title": person["title"],
+        "titles": person["titles"],
     }
 
 @app.route("/list")
@@ -100,6 +106,50 @@ def get_list():
         mimetype="application/json"
     )
 
+@app.route("/searchHouse")
+def get_searchHouse():
+    def work(tx, q_):
+        return list(tx.run(
+            "MATCH (house:House) "
+            "WHERE toLower(house.name) CONTAINS toLower($name) "
+            "RETURN house AS house LIMIT 20",
+            {"name": q_}
+        ))
+
+    try:
+        q = request.args["q"]
+    except KeyError:
+        return []
+    else:
+        db = get_db()
+        results = db.read_transaction(work, q)
+        return Response(
+            dumps([serialize_house(record["house"]) for record in results]),
+            mimetype="application/json"
+        )
+
+@app.route("/searchCharacter")
+def get_searchCharacter():
+    def work(tx, q_):
+        return list(tx.run(
+            "MATCH (person:Person) "
+            "WHERE toLower(person.name) CONTAINS toLower($name) "
+            "RETURN person AS person LIMIT 20",
+            {"name": q_}
+        ))
+
+    try:
+        q = request.args["q"]
+    except KeyError:
+        return []
+    else:
+        db = get_db()
+        results = db.read_transaction(work, q)
+        return Response(
+            dumps([(serialize_person(record["person"]),record["person"].id) for record in results]),
+            mimetype="application/json"
+        )
+
 @app.route("/allies/<house_id>", methods=["GET"])
 def get_allies(house_id):
     def work(tx):
@@ -115,6 +165,53 @@ def get_allies(house_id):
         dumps(results[0]["num_allies"]),
         mimetype="application/json"
     )
+
+@app.route("/foundedBy/<house_id>", methods=["GET"])
+def get_foundedBy(house_id):
+    def work(tx):
+        return list(tx.run(
+            "MATCH (h:House)-[r:FOUNDED_BY]->(p:Person) "
+            "WHERE h.id = toInteger($house) "
+            "RETURN p as person",
+            {"house": house_id}
+        ))
+    db = get_db()
+    results = db.read_transaction(work)
+    return Response(
+        dumps(serialize_person(results[0]["person"])["name"] if results else "None"),
+        mimetype="application/json"
+    )
+
+
+@app.route("/createCharacter")
+def createCharacter():
+    def work(tx, name_,isFemale_,playedBy_,culture_):
+        result = tx.run(
+            "CREATE (person:Person {name:$name, isFemale:$isFemale,playedBy:$playedBy,culture:$culture}) RETURN person AS person ,id(person) AS id",
+            {"name": name_,"isFemale": isFemale_,"playedBy":playedBy_,"culture":culture_}
+        )
+        record = result.single()
+        return serialize_person(record["person"]), record["id"]
+
+    try:
+        name = request.args["name"]
+        if(request.args["isFemale"]=="true"):
+            isFemale = True
+        else:
+            isFemale = False
+        playedBy = request.args["playedBy"]
+        culture = request.args["culture"]
+
+    except KeyError:
+        return ""
+    else:
+        db = get_db()
+        result = db.write_transaction(work, name, isFemale,playedBy, culture)
+        print
+        return Response(
+            dumps(result),
+            mimetype="application/json"
+        )
 
 if __name__ == "__main__":
     logging.root.setLevel(logging.INFO)
