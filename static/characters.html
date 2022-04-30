@@ -12,14 +12,13 @@
 
 <body>
     <div id="headerbar"></div>
-    <div id="success"></div>
     <div class="col-md-5">
         <div class="panel panel-default">
             <div class="panel-heading">Search your characters</div>
             <form role="search" class="navbar-form" id="search">
                 <div class="form-group">
-                    <input type="text" value="Sansa" placeholder="Search for Movie Title"
-                        class="form-control" name="search">
+                    <input type="text" value="" placeholder="Character name" class="form-control"
+                        name="search">
                 </div>
                 <button class="btn btn-default" type="submit">Search</button>
             </form>
@@ -39,31 +38,33 @@
                     <h4 id="character_name"></h4>
                     <ul id="character_details">
                     </ul>
+                    <form role="create-rel" class="navbar-form" id="create-rel"></form>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-5"></div>
     <div class="col-md-5">
+        <div id="success"></div>
         <div class="panel panel-default">
-            <div class="panel-heading ">Create a characters</div>
+            <div class="panel-heading ">Create a character</div>
             <form role="create" class="navbar-form" id="create">
                 <div class="form-group">
-                    <label>Name: </label>
-                    <input type="text" placeholder="Name"
-                        class="form-control" name="name" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="30" required>
-                    <label>Played by: </label>
-                    <input type="text" placeholder="Played by"
-                        class="form-control" name="playedBy" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="30" required>
-                    <label>Culture: </label>
-                    <input type="text" placeholder="Culture"
-                        class="form-control" name="culture" pattern="[a-zA-Z0-9]+" minlength="3" maxlength="30" required>
-                    <label>Gender: </label><br>
+                    <label style="margin-top: 1rem;">Name: </label>
+                    <input type="text" placeholder="Name" class="form-control" name="name" pattern="[a-zA-Zñáéíóú0-9 ]+"
+                        minlength="3" maxlength="30" required>
+                    <label style="margin-top: 2rem;">Played by: </label>
+                    <input type="text" placeholder="Played by" class="form-control" name="playedBy"
+                        pattern="[a-zA-Zñáéíóú ]+" minlength="3" maxlength="30" required>
+                    <label style="margin-top: 2rem;">Culture: </label>
+                    <input type="text" placeholder="Culture" class="form-control" name="culture"
+                        pattern="[a-zA-Zñáéíóú ]+" minlength="3" maxlength="30" required>
+                    <label style="margin-top: 2rem;">Gender: </label><br>
                     <select class="form-control" name="isFemale">
                         <option value="false">Male</option>
                         <option value="true" selected>Female</option>
                     </select><br><br>
-                    <button class="btn btn-default" type="submit">Create</button>
+                    <button style="margin-top: 2rem;" class="btn btn-default" type="submit">Create</button>
                 </div>
 
             </form>
@@ -74,56 +75,88 @@
     <script src="https://d3js.org/d3.v3.min.js" type="text/javascript"></script>
     <script type="text/javascript">
 
-        function showCharacter(character,id) {
-            $("#character_name").empty().append(character.name + " (ID: "+id+")");
+        function showCharacter(character, id) {
+            $("#character_name").empty().append(character.name + " (ID: " + id + ")");
             const $list = $("#character_details").empty();
-            $list.append($("<li><b>Gender: </b>" + ((character.isFemale) ? ("Female"):("Male")) + "</li>"));
-            if(character.born)
-            $list.append($("<li><b>Born: </b>" + (character.born) + "</li>"));
-            if(character.died)
-            $list.append($("<li><b>Died: </b>" + (character.died) + "</li>"));
-            if(character.culture)
-            $list.append($("<li><b>Culture: </b>" + (character.culture) + "</li>"));
-            if(character.titles)
-            $list.append($("<li><b>Titles: </b>" + (character.titles) + "</li>"));
-            if(character.playedBy)
-            $list.append($("<li><b>Played by: </b>" + (character.playedBy) + "</li>"));
-            if(character.alliases)
-            $list.append($("<li><b>Alliases: </b>" + (character.alliases) + "</li>"));
-            if(character.tvSeries)
-            $list.append($("<li><b>Season: </b>" + (character.tvSeries) + "</li>"));
-
+            $list.append($("<li><b>Gender: </b>" + ((character.isFemale) ? ("Female") : ("Male")) + "</li>"));
+            if (character.born)
+                $list.append($("<li><b>Born: </b>" + (character.born) + "</li>"));
+            if (character.died)
+                $list.append($("<li><b>Died: </b>" + (character.died) + "</li>"));
+            if (character.culture)
+                $list.append($("<li><b>Culture: </b>" + (character.culture) + "</li>"));
+            if (character.titles)
+                $list.append($("<li><b>Titles: </b>" + (character.titles) + "</li>"));
+            if (character.playedBy)
+                $list.append($("<li><b>Played by: </b>" + (character.playedBy) + "</li>"));
+            if (character.alliases)
+                $list.append($("<li><b>Alliases: </b>" + (character.alliases) + "</li>"));
+            if (character.tvSeries)
+                $list.append($("<li><b>Season: </b>" + (character.tvSeries) + "</li>"));
+            const $form = $("#create-rel").empty();
+            $form.append($("<label style='margin-top: 2rem;'>House ID: </label>"
+                + "<input type='text' placeholder='ID' class='form-control' name='id' pattern='[0-9]+' maxlength='10' required>"
+                + "<button style='margin-top: 1rem;' class='btn btn-default' type='submit'>Create alliance</button>"));
         }
 
         function search() {
-            const query=$("#search").find("input[name=search]").val();
+            const query = $("#search").find("input[name=search]").val();
             $.get("/searchCharacter?q=" + encodeURIComponent(query),
-                    function (data) {
-                        const t = $("table#results tbody").empty();
-                        if (!data || data.length == 0) return;
-                        data.forEach(function (character, index) {
+                function (data) {
+                    const t = $("table#results tbody").empty();
+                    if (!data || data.length == 0) return;
+                    data.forEach(function (character, index) {
                         $("<tr><td class='character'>" + character[0].name
-                            + "</td></tr>").appendTo(t).click(function() { showCharacter(character[0],character[1]);});
+                            + "</td></tr>").appendTo(t).click(function () { showCharacter(character[0], character[1]); });
                     });
 
-                    }, "json");
+                }, "json");
             return false;
         }
+
         function create() {
             $.get("/createCharacter?" + $('#create').serialize(),
-                    function (data) {
-                        console.log(data)
-                        $("#create").trigger("reset");
-                        $("#success").append("<p>Character created successfully</p>").delay(5000).queue(function(){$("#success").empty()})
-                        showCharacter(data[0],data[1]);
+                function (data) {
+                    $("#create").trigger("reset");
+                    $("#success").append("<p style='color: green; text-align: center;'>Character created successfully</p>");
+                    setTimeout(
+                        function () {
+                            $("#success").empty();
+                        }, 5000);
+                    showCharacter(data[0], data[1]);
 
 
-                    });
+                });
             return false;
         }
+
+        function createRel() {
+            const houseid = $("#create-rel").find("input[name=id]").val();
+            const characterid = $("#character_name").text().split(":")[1].trim().replace(")", "");
+            $.get("/createRel?" + "houseid=" + houseid + "&characterid=" + characterid,
+                function (data) {
+                    if (data) {
+                        $("#success").append("<p style='color: green; text-align: center;'>Alliance created successfully</p>")
+                        setTimeout(
+                            function () {
+                                $("#success").empty();
+                            }, 5000);
+                    }
+                    else {
+                        $("#success").append("<p style='color: red; text-align: center;'>Alliance already created</p>")
+                        setTimeout(
+                            function () {
+                                $("#success").empty();
+                            }, 5000);
+                    }
+                });
+            return false;
+        }
+
         $("#headerbar").load("/static/headerbar.html");
         $("#create").submit(create);
         $("#search").submit(search);
+        $("#create-rel").submit(createRel);
 
     </script>
 </body>

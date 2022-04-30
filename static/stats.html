@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
+    <link rel="stylesheet"
+        href="https://neo4j-documentation.github.io/developer-resources/language-guides/assets/css/main.css">
+    <title>Proyecto CBD - Neo4J</title>
+</head>
+
+<body>
+    <div id="headerbar"></div>
+    <div class="row">
+        <div class="col-md-5">
+            <div class="panel panel-default">
+                <div class="panel-heading" id="top10">Number of seats in a region</div>
+                <form role="query1" class="navbar-form" data-toggle="collapse" id="query1">
+                    <div class="form-group">
+                        <label style="margin-top: 2rem;">Region: </label><br>
+                        <select id="region-select" class="form-control" name="region">
+                        </select>
+                        <button class="btn btn-default" type="submit">Search</button>
+                    </div>
+                </form>
+                <div id="result-query-1">
+
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="panel panel-default">
+                <div class="panel-heading" id="title">Details</div>
+                <div class="row">
+                    <div class="col-md-8 col-sm-8">
+                        <h4 id="house_name"></h4>
+                        <ul id="house_details">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $("#headerbar").load("/static/headerbar.html");
+
+        function getRegions() {
+            $.get("/regions",
+                    function (data) {
+                        const select = $("#region-select")
+                        data.forEach(function (region, index) {
+                        $("<option value=" + region[1] + ">" + region[0].name + "</option>").appendTo(select)
+                    });
+                })
+            return false;
+        }
+        function search() {
+            const query=$("#query1").find("select[name=region]").val();
+            const name=$("#query1").find("select[name=region] option:selected").text();
+            $.get("/searchRegion?q=" + encodeURIComponent(query),
+                    function (data) {
+                        $("#result-query-1").empty().append("<p style='text-align: center; margin-top: 1rem; margin-bottom: 1rem;'><b>" + name + " has " + data + " seats</b></p>");
+                    });
+            return false;
+        }
+        getRegions();
+        $("#query1").submit(search);
+    </script>
+</body>
+
+</html>

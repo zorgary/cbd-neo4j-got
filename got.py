@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from json import dumps
 import logging
+from venv import create
 
 from flask import (
     Flask,
@@ -48,6 +49,10 @@ def get_index():
 @app.route("/characters")
 def get_characters():
     return app.send_static_file("characters.html")
+
+@app.route("/stats")
+def get_stats():
+    return app.send_static_file("stats.html")
 
 def serialize_house(house):
     return {
@@ -207,11 +212,80 @@ def createCharacter():
     else:
         db = get_db()
         result = db.write_transaction(work, name, isFemale,playedBy, culture)
-        print
         return Response(
             dumps(result),
             mimetype="application/json"
         )
+
+@app.route("/createRel")
+def createRel():
+    def work(tx, houseid_,characterid_):
+        result = tx.run(
+            "MATCH (p:Person)-[r:ALLIED_WITH]->(h:House) WHERE h.id=toInteger($houseid) AND id(p)= toInteger($characterid) RETURN COUNT(p) AS match",
+            {"houseid": houseid_,"characterid": characterid_}
+        )
+
+        match = result.data()[0]["match"]
+
+        if not match:
+            tx.run(
+                "MATCH (h:House),(p:Person) WHERE h.id=toInteger($houseid) AND id(p)= toInteger($characterid) "
+                "CREATE (p)-[r:ALLIED_WITH]->(h)",
+                {"houseid": houseid_,"characterid": characterid_}
+            )
+            return True
+        else:
+            return False
+    try:
+        houseid = request.args["houseid"]
+        characterid = request.args["characterid"]
+    except KeyError:
+        return ""
+    else:
+        db = get_db()
+        response = db.write_transaction(work, houseid, characterid)
+        return Response(
+            dumps(response),
+            mimetype="application/json"
+        )
+
+@app.route("/searchRegion")
+def get_searchRegion():
+    def work(tx, q_):
+        res = tx.run(
+            "MATCH (s:Seat)-[so:SEAT_OF]->(h:House)-[ir:IN_REGION]->(r:Region) "
+            "WHERE id(r) = toInteger($id) "
+            "RETURN COUNT(DISTINCT s) AS num",
+            {"id": q_}
+        )
+        return res.data()[0]["num"]
+
+    try:
+        q = request.args["q"]
+    except KeyError:
+        return []
+    else:
+        db = get_db()
+        results = db.read_transaction(work, q)
+        return Response(
+            dumps(results),
+            mimetype="application/json"
+        )
+
+@app.route("/regions")
+def get_regions():
+    def work(tx):
+        return list(tx.run(
+            "MATCH (r:Region) "
+            "RETURN r AS region, id(r) AS id"
+        ))
+
+    db = get_db()
+    results = db.read_transaction(work)
+    return Response(
+        dumps([(serialize_region(record["region"]),record["id"]) for record in results]),
+        mimetype="application/json"
+    )
 
 if __name__ == "__main__":
     logging.root.setLevel(logging.INFO)
