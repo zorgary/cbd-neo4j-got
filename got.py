@@ -287,6 +287,67 @@ def get_regions():
         mimetype="application/json"
     )
 
+@app.route("/searchHouseSeason")
+def get_searchHouseSeason():
+    def work(tx, q_):
+        return list(tx.run(
+            "MATCH (n:Person)-[r:ALLIED_WITH]->(h:House) "
+            "WHERE $season IN n.tvSeries "
+            "RETURN h.name as name, COUNT(h) as num "
+            "ORDER BY COUNT(h) DESC LIMIT 5",
+            {"season": q_}
+        ))
+    try:
+        q = request.args["q"]
+        qSpace = q.replace("_"," ")
+
+    except KeyError:
+        return []
+    else:
+        db = get_db()
+        results = db.read_transaction(work, qSpace)
+        return Response(
+            dumps([(record["name"],record["num"]) for record in results]),
+            mimetype="application/json"
+        )
+
+@app.route("/houseMostAllied")
+def get_houseMostAllied():
+    def work(tx):
+        return list(tx.run(
+            "MATCH (p_allied:Person)-[r:ALLIED_WITH]->(h:House)<-[r2:SWORN_TO]-(h2:House) <-[r3:ALLIED_WITH]-(p_swear_loyalty:Person) "
+            "RETURN h.name AS house, "
+            "COUNT(DISTINCT p_allied) AS allieds, "
+            "COUNT(DISTINCT p_swear_loyalty) AS swear_loyalty, "
+            "COUNT(DISTINCT p_allied) + COUNT(DISTINCT p_swear_loyalty) AS num_person "
+            "ORDER BY num_person DESC LIMIT 10"
+        ))
+
+    db = get_db()
+    results = db.read_transaction(work)
+    return Response(
+        dumps([(record["house"],record["allieds"],record["swear_loyalty"],record["num_person"]) for record in results]),
+        mimetype="application/json"
+    )
+
+@app.route("/genderRatio")
+def get_genderRatio():
+    def work(tx):
+        return tx.run(
+            "MATCH (n:Person) "
+            "CALL apoc.cypher.run('MATCH (p:Person) WHERE p.isFemale RETURN p', {}) "
+            "YIELD value "
+            "RETURN round(toFloat(COUNT(DISTINCT value)) / COUNT(DISTINCT n),2) AS num_women"
+        )
+
+    db = get_db()
+    result = db.read_transaction(work)
+    print(result)
+    return Response(
+        True,
+        mimetype="application/json"
+    )
+
 if __name__ == "__main__":
     logging.root.setLevel(logging.INFO)
     logging.info("Starting on port %d, database is at %s", port, url)

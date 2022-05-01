@@ -13,16 +13,20 @@
 <body>
     <div id="headerbar"></div>
     <div class="row">
-        <form role="search" class="navbar-form" data-toggle="collapse" id="search">
-            <div class="form-group">
-                <input type="text" placeholder="Search House"
-                    class="form-control" name="search">
-            </div>
-            <button class="btn btn-default" type="submit">Search</button>
-        </form>
-        <form class="navbar-form" data-toggle="collapse" id="list">
-            <button class="btn btn-default"  type="submit">List Top 10 Houses</button>
-        </form>
+        <div class="col-md-3">
+            <form role="search" class="navbar-form" id="search">
+                <div class="form-group">
+                    <input type="text" placeholder="Search House"
+                        class="form-control" name="search">
+                </div>
+                <button class="btn btn-default" type="submit">Search</button>
+            </form>
+        </div>
+        <div class="col-md-0">
+            <form class="navbar-form" id="list">
+                <button class="btn btn-default"  type="submit">List Top 10 Houses</button>
+            </form>
+        </div>
     </div>
     <div class="row">
         <div class="col-md-5">
@@ -35,7 +39,7 @@
                     <tbody>
                     </tbody>
                     <div id="loading">
-                        <p style="text-align: center; margin-top: 1rem; margin-bottom: 1rem;">Cargando datos...</p>
+                        <p style="text-align: center; margin-top: 1rem; margin-bottom: 1rem;">Loading data...</p>
                     </div>
                 </table>
             </div>
