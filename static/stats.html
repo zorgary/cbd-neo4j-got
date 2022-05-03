@@ -12,69 +12,77 @@
 
 <body>
     <div id="headerbar"></div>
-    <div class="row">
-        <div class="col-md-5">
-            <div class="panel panel-default">
-                <div class="panel-heading" id="top10">Number of seats in a region</div>
-                <form role="query1" class="navbar-form" data-toggle="collapse" id="query1">
-                    <div class="form-group">
-                        <label style="margin-top: 2rem;">Region: </label><br>
-                        <select id="region-select" class="form-control" name="region">
-                        </select>
-                        <button class="btn btn-default" type="submit">Search</button>
-                    </div>
-                </form>
-                <div id="result-query-1">
-
+    <div class="col-md-5">
+        <div class="panel panel-default">
+            <div class="panel-heading" id="houseSeason">Most important houses by season</div>
+            <form role="query2" class="navbar-form" id="query2">
+                <div class="form-group">
+                    <label style="margin-top: 2rem;">Season: </label><br>
+                    <select id="season-select" class="form-control" name="season">
+                        <option value="Season_1">Season 1</option>
+                        <option value="Season_2">Season 2</option>
+                        <option value="Season_3">Season 3</option>
+                        <option value="Season_4">Season 4</option>
+                        <option value="Season_5">Season 5</option>
+                        <option value="Season_6">Season 6</option>
+                    </select>
+                    <button class="btn btn-default" type="submit">Search</button>
                 </div>
+            </form>
+            <table id="results" class="table table-striped table-hover">
+                <thead>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
             </div>
         </div>
-        <div class="col-md-5">
-            <div class="panel panel-default">
-                <div class="panel-heading" id="houseSeason">Most important houses by season</div>
-                <form role="query2" class="navbar-form" data-toggle="collapse" id="query2">
-                    <div class="form-group">
-                        <label style="margin-top: 2rem;">Season: </label><br>
-                        <select id="season-select" class="form-control" name="season">
-                        </select>
-                        <button class="btn btn-default" type="submit">Search</button>
-                    </div>
-                </form>
-                <form role="clearQuery2" class="navbar-form" data-toggle="collapse" id="clearQuery2">
-                    <div class="form-group">
-                        <button class="btn btn-default" type="submit">Clear</button>
-                    </div>
-                </form>
-                <table id="results" class="table table-striped table-hover">
-                    <thead>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-
-                </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="panel panel-default">
+            <div class="panel-heading">10 House with more allies</div>
+            <table id="allieds" class="table table-striped table-hover">
+                <thead>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div id="loading">
+                <p style="text-align: center; margin-top: 20rem; margin-bottom: 20rem;">Loading data...</p>
+            </div>
             </div>
         </div>
-        <div class="col-md-5">
-            <div class="panel panel-default">
-                <div class="panel-heading" id="houseSeason">10 House with more allieds</div>
-                <table id="allieds" class="table table-striped table-hover">
-                    <thead>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-                <div id="loading">
-                    <p style="text-align: center; margin-top: 1rem; margin-bottom: 1rem;">Loading data...</p>
+    </div>
+    <div class="col-md-5">
+        <div class="panel panel-default">
+            <div class="panel-heading" id="top10">Number of seats in a region</div>
+            <form role="query1" class="navbar-form" id="query1">
+                <div class="form-group">
+                    <label style="margin-top: 2rem;">Region: </label><br>
+                    <select id="region-select" class="form-control" name="region">
+                        <option value="">Loading...</option>
+                    </select>
+                    <button class="btn btn-default" type="submit">Search</button>
                 </div>
-                </div>
+            </form>
+            <div id="result-query-1">
+
             </div>
         </div>
-        <div class="col-md-5">
-            <div class="panel panel-default">
-                <div class="panel-heading" id="houseSeason">Gender ratio</div>
+    </div>
+    <div class="col-md-5"></div>
 
-                </div>
+    <div style="position: fixed; left: 0; bottom: 0; text-align: center;" class="col-md-10">
+        <div class="col-md-6">
+            <div id="result-nodes" class="panel panel-default">
+                <p style="text-align: center; margin-top: 1rem; margin-bottom: 1rem;">Loading data...</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div id="result-relationships" class="panel panel-default">
+                <p style="text-align: center; margin-top: 1rem; margin-bottom: 1rem;">Loading data...</p>
             </div>
         </div>
     </div>
@@ -87,24 +95,15 @@
         function getRegions() {
             $.get("/regions",
                     function (data) {
-                        const select = $("#region-select")
+                        const select = $("#region-select");
+                        select.empty();
                         data.forEach(function (region, index) {
                         $("<option value=" + region[1] + ">" + region[0].name + "</option>").appendTo(select)
                     });
                 })
             return false;
         }
-        function getSeasons() {
-            const select = $("#season-select")
-            $("<option value=Season_1>Season 1</option>").appendTo(select)
-            $("<option value=Season_2>Season 2</option>").appendTo(select)
-            $("<option value=Season_3>Season 3</option>").appendTo(select)
-            $("<option value=Season_4>Season 4</option>").appendTo(select)
-            $("<option value=Season_5>Season 5</option>").appendTo(select)
-            $("<option value=Season_6>Season 6</option>").appendTo(select)
 
-            return false;
-        }
         function search() {
             const query=$("#query1").find("select[name=region]").val();
             const name=$("#query1").find("select[name=region] option:selected").text();
@@ -119,7 +118,7 @@
             const name=$("#query2").find("select[name=season] option:selected").text();
             $.get("/searchHouseSeason?q=" + encodeURIComponent(query),
                 function (data) {
-                    $("table#results thead").empty().append($("<tr><th>House</th><th>Number XX</th></tr>"))
+                    $("table#results thead").empty().append($("<tr><th>House</th><th>Character appearances</th></tr>"))
                     const t = $("table#results tbody").empty();
                     data.forEach(function (house, index) {
                         $("<tr><td class='house'>" + house[0]+"</td>"
@@ -132,7 +131,7 @@
         function houseMostAllied() {
             $.get("/houseMostAllied",
                 function (data) {
-                    $("table#allieds thead").append($("<tr><th>House</th><th>Allieds</th><th>Swear loyalty</th><th>Number of person</th></tr>"))
+                    $("table#allieds thead").append($("<tr><th>House</th><th>Allies</th><th>Swear loyalty</th><th>Total</th></tr>"))
                     const t = $("table#allieds tbody").empty();
                     $("#loading").empty();
                     data.forEach(function (house, index) {
@@ -145,25 +144,21 @@
                 }, "json");
             return false;
         }
-        function genderRatio() {
-            $.get("/genderRatio",
-                function (data) {
-                    console.log(data)
-                }, "json");
+
+        function getGraphStats() {
+            $.get("/graphStats",
+                    function (data) {
+                        $("#result-nodes").empty().append("<p style='text-align: center; margin-top: 1rem; margin-bottom: 1rem;'><b>Nodes stored in DB: " + data[0] + "</b></p>");
+                        $("#result-relationships").empty().append("<p style='text-align: center; margin-top: 1rem; margin-bottom: 1rem;'><b>Relations stored in DB: " + data[1] + "</b></p>");
+                    });
             return false;
         }
-        function clearQuery2() {
-            $("table#results thead").empty();
-            $("table#results tbody").empty();
-            return false;
-        }
+
         houseMostAllied();
-        getSeasons()
         getRegions();
-        genderRatio();
+        getGraphStats();
         $("#query1").submit(search);
         $("#query2").submit(searchHouseSeason);
-        $("#clearQuery2").submit(clearQuery2);
     </script>
 </body>
 

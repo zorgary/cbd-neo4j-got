@@ -46,6 +46,10 @@ def close_db(error):
 def get_index():
     return app.send_static_file("index.html")
 
+@app.route("/houses")
+def get_houses():
+    return app.send_static_file("houses.html")
+
 @app.route("/characters")
 def get_characters():
     return app.send_static_file("characters.html")
@@ -330,21 +334,33 @@ def get_houseMostAllied():
         mimetype="application/json"
     )
 
-@app.route("/genderRatio")
-def get_genderRatio():
+@app.route("/culture/<house_id>", methods=["GET"])
+def get_culture(house_id):
     def work(tx):
-        return tx.run(
-            "MATCH (n:Person) "
-            "CALL apoc.cypher.run('MATCH (p:Person) WHERE p.isFemale RETURN p', {}) "
-            "YIELD value "
-            "RETURN round(toFloat(COUNT(DISTINCT value)) / COUNT(DISTINCT n),2) AS num_women"
-        )
-
+        return list(tx.run(
+            "MATCH (p:Person)-[r:ALLIED_WITH]->(h:House) "
+            "WHERE h.id = toInteger($house) "
+            "RETURN p.culture AS culture, COUNT(p.culture) AS num "
+            "ORDER BY num DESC LIMIT 1",
+            {"house": house_id}
+        ))
     db = get_db()
-    result = db.read_transaction(work)
-    print(result)
+    results = db.read_transaction(work)
     return Response(
-        True,
+        dumps(results[0]["culture"]),
+        mimetype="application/json"
+    )
+
+@app.route("/graphStats/")
+def get_graphStats():
+    def work(tx):
+        nodes = tx.run("MATCH (n) RETURN count(n) AS nodes").data()[0]["nodes"]
+        relationships = tx.run("MATCH p=()-->() RETURN count(p) AS relations").data()[0]["relations"]
+        return (nodes, relationships)
+    db = get_db()
+    results = db.read_transaction(work)
+    return Response(
+        dumps(results),
         mimetype="application/json"
     )
 

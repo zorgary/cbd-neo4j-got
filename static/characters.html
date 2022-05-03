@@ -96,9 +96,9 @@
             if (character.tvSeries)
                 $list.append($("<li><b>Season: </b>" + (character.tvSeries) + "</li>"));
             const $form = $("#create-rel").empty();
-            $form.append($("<label style='margin-top: 2rem;'>House ID: </label>"
+            $form.append($("<div class='col-sm-offset-0 col-sm-5'><label style='margin-top: 2rem;'>House ID: </label>"
                 + "<input type='text' placeholder='ID' class='form-control' name='id' pattern='[0-9]+' maxlength='10' required>"
-                + "<button style='margin-top: 1rem;' class='btn btn-default' type='submit'>Create alliance</button>"));
+                + "<button style='margin-top: 1rem; margin-bottom: 2rem' class='btn btn-default' type='submit'>Create alliance</button></div>"));
         }
 
         function search() {
