@@ -80,11 +80,14 @@
 
                 $.get("/foundedBy/" + encodeURIComponent(house.id), function (data) {
                     const $list = $("#house_details")
+                    if (data !== "None")
                     $list.append($("<li><b>Founded by: </b>" + data + "</li>"));
                 });
 
+                if (data)
                 $.get("/culture/" + encodeURIComponent(house.id), function (data) {
                     const $list = $("#house_details")
+                    if (data !== null)
                     $list.append($("<li><b>Culture: </b>" + data + "</li>"));
                 });
             });
