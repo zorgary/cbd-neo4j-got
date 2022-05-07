@@ -138,6 +138,7 @@
             $.get("/createRel?" + "houseid=" + houseid + "&characterid=" + characterid,
                 function (data) {
                     if (data) {
+                        $("#create-rel").trigger("reset");
                         $("#success").append("<p style='color: green; text-align: center;'>Alliance created successfully</p>")
                         setTimeout(
                             function () {
